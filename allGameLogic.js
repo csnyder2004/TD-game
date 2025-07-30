@@ -1,471 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jungle Tower Defense</title>
-  <style>
-    
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      font-size: 15px;
-      background-color: #111112;
-      margin: 0;
-      color: #cdf7b9;
-    }
-
-    #game-container {
-      display: flex;
-      margin: 20px auto;
-      background: #7a83b5;
-      box-shadow: 0 0 30px #223e1a;
-      border: 6px solid #666863;
-      border-radius: 12px;
-      overflow: hidden;
-      width: fit-content;
-    }
-
-    #game-area {
-      flex: 0 0 auto;
-    }
-
-    #sidebar {
-      flex: 0 0 200px; /* adjust as needed */
-      background: #0b0b0f;
-      padding: 16px;
-      border-left: 2px solid #4b6d1d;
-    }
-
-    canvas {
-      display: block;
-      width: 900px;
-      height: 600px;
-      cursor: crosshair;
-    }
-
-    #ui {
-      padding: 6px;
-      background: #0b0b0f;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-      align-items: center;
-      border-top: 2px solid #4b6d1d;
-      box-shadow: 0 -3px 12px rgba(0,0,0,0.3);
-    }
-
-
-    #money-display,
-    #lives-display,
-    #wave-display,
-    #enemies-left {
-      font-weight: bold;
-      font-size: 16px;
-      text-align: center;
-      color: #f0fff0;
-      background: linear-gradient(#010101, #1d301d);
-      border: 1px solid #567;
-      border-radius: 2px;
-      padding: 2px 2px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 4px #113;
-      display: block;
-    }
-
-
-    button {
-      background: linear-gradient(to bottom, #03094f, #535272);
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      font-weight: 600;
-      padding: 10px 16px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.25s, transform 0.2s ease;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-    }
-
-    button:hover {
-      background: linear-gradient(to bottom, #6fa324, #4a6a18);
-      transform: scale(1.05);
-    }
-
-    button:active {
-      transform: scale(0.97);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-    }
-
-
-    #tower-menu {
-      display: flex;
-      flex-wrap: wrap;
-      flex-direction: column;
-      gap: 6px;
-      max-width: 640px;
-      justify-content: center;
-    }
-
-    #tower-preview {
-      background: #121a33;
-      border: 2px solid #cdf7b9;
-      color: #cdf7b9;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 14px;
-      position: absolute;
-      right: 12px;
-      top: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.7);
-      min-width: 220px;
-      max-width: 260px;
-      z-index: 1000;
-    }
-
-
-    #tower-preview h3 {
-      margin: 0;
-      font-size: 16px;
-      border-bottom: 1px solid #cdf7b944;
-      padding-bottom: 4px;
-    }
-
-    #preview-stats {
-      list-style-type: none;
-      padding: 0;
-      margin: 8px 0 0 0;
-    }
-
-
-    #upgrade-panel {
-      background: #5c5c5e;
-      border: 2px solid #cdf7b9;
-      border-radius: 10px;
-      padding: 12px;
-      min-width: 260px;
-      box-shadow: 0 0 12px #001;
-      text-align: center;
-      margin-top: 10px;
-    }
-    #upgrade-panel button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      width: 50%;
-      margin: 6px 0;
-    }
-
-
-
-
-    #message-box {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(6, 6, 139, 0.7);
-      color: #f9d71c;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 14px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      max-width: 90%;
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    /* Tooltip */
-    .tooltip {
-      position: relative;
-      display: inline-block;
-    }
-
-    .tooltip .tooltiptext {
-      visibility: hidden;
-      width: max-content;
-      max-width: 200px;
-      background-color: #2e3b11;
-      color: #cdf7b9;
-      text-align: left;
-      border-radius: 6px;
-      padding: 8px;
-      border: 1px solid #cdf7b9;
-      position: absolute;
-      z-index: 999;
-      bottom: 120%;
-      left: 50%;
-      transform: translateX(-50%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      font-size: 13px;
-    }
-
-    .tooltip:hover .tooltiptext {
-      visibility: visible;
-      opacity: 1;
-    }
-    /* UI layout rows */
-    .ui-row {
-      display: block;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    /* Grid for tower buttons */
-    .ui-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-      justify-content: center;
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto 12px auto;
-    }
-
-    /* Tower buttons look consistent */
-    #tower-menu button {
-      width: 100%;
-      padding: 10px;
-      font-weight: bold;
-    }
-
-
-    #status-row {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px; /* space between boxes */
-      background: #1d1a37;
-      border: 2px solid #4b6d1d;
-      border-radius: 4px;
-      padding: 4px 8px;
-      box-shadow: inset 0 0 2px #000;
-      margin: 0 auto 10px auto;
-      max-width: fit-content;
-    }
-
-
-    /* Control buttons look consistent */
-    #control-row button {
-      min-width: 120px;
-    }
-
-    #control-row {
-      display: block;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    /* Add a game title */
-    #game-title {
-      text-align: center;
-      font-size: 28px;
-      font-weight: bold;
-      color: #cdf7b9;
-      margin-bottom: 16px;
-      text-shadow: 0 2px 4px #000;
-    }
-
-    /* Upgrade panel: tidy grid */
-    #upgrade-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: center;
-    }
-
-
-    #enemy-info-panel {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #101738;
-      border: 2px solid #cdf7b9;
-      border-radius: 12px;
-      padding: 20px;
-      color: #cdf7b9;
-      max-height: 80%;
-      overflow-y: auto;
-      box-shadow: 0 0 20px #000;
-      z-index: 9999;
-    }
-
-    #enemy-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
-    }
-
-    .enemy-card {
-      background: #090909;
-      border: 1px solid #8f1111;
-      border-radius: 8px;
-      padding: 10px;
-      text-align: center;
-    }
-
-    .enemy-card img {
-      display: block;
-      margin: 0 auto 8px;
-      width: 64px;
-      height: 64px;
-      background: #000;
-    }
-
-
-
-
-  </style>
-
-</head>
-<body>
-
-
-
-  <h1 id="game-title">🌿 Cole's Tower Defense 🌿
-
-  </h1>
-
-  <div id="status-row" class="ui-row">
-      <div class="stat-box" id="money-display">💰 Money: 500</div>
-      <div class="stat-box" id="lives-display">❤️ Lives: 10</div>
-      <div class="stat-box" id="wave-display">🌊 Wave: 0</div>
-      <div class="stat-box" id="enemies-left">🧟 Enemies Left: 0</div>
-    </div>
-
-
-
-
-
-
-
-
-    <div id="game-container">
-      <div id="game-area">
-        <canvas id="gameCanvas" width="900" height="600"></canvas>
-      </div>
-      <div id="sidebar">
-        <div id="tower-menu">
-          <!-- Tower buttons -->
-          <div class="tooltip">
-            <button data-tower="basic">Basic Tower ($50)</button>
-            <div class="tooltiptext">Reliable starter with average damage and speed.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="sniper">Sniper Tower ($120)</button>
-            <div class="tooltiptext">Long-range, slow reload, high damage.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="cannon">Cannon Tower ($150)</button>
-            <div class="tooltiptext">Deals splash damage in a small radius.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="flame">Flame Tower ($180)</button>
-            <div class="tooltiptext">Rapid-fire burning damage over time.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="ice">Ice Tower ($200)</button>
-            <div class="tooltiptext">Slows enemies and deals cold damage.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="tesla">Tesla Tower ($300)</button>
-            <div class="tooltiptext">Hits multiple enemies with electricity.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="missile">Missile Tower ($350)</button>
-            <div class="tooltiptext">Long range, powerful missiles.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="sniperElite">Sniper Elite ($400)</button>
-            <div class="tooltiptext">Extreme range and high precision shots.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="Obsidian">Obsidian ($500)</button>
-            <div class="tooltiptext">Burns enemies and adds fire DOT.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="Nova">Nova ($650)</button>
-            <div class="tooltiptext">AOE pulse that hits all nearby enemies.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="poison">Poison ($250)</button>
-            <div class="tooltiptext">Weak but cheap — poisons enemies over time.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="railgun">Railgun ($800)</button>
-            <div class="tooltiptext">Extreme power and range. Slow recharge.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="hyperLaser">HyperLaser ($4000)</button>
-            <div class="tooltiptext">Ultra-fast laser tower with massive power.</div>
-          </div>
-          <div class="tooltip">
-            <button data-tower="omegaCannon">Omega Cannon ($10000)</button>
-            <div class="tooltiptext">Massive cannon with extreme power and blast radius.</div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-  <div id="message-box"></div>
-    <div id="ui">
-     
-      <div id="control-row" class="ui-row">
-        <button id="startBtn">Start Wave</button>
-        <button id="stopBtn">Pause</button>
-        <button id="autoBtn">Auto Start: ON</button>
-        <button id="speedBtn">Speed: 1x</button>
-        <button id="enemyInfoBtn">Enemy Info</button>
-        <button id="cancelTowerBtn" style="position:absolute; bottom:10px; right:10px; z-index:20; padding:6px 12px;">
-          ❌ Cancel Placement
-        </button>
-
-
-
-
-      </div>
-    
-        <div id="upgrade-panel">
-          <div>
-          <strong>Upgrade Tower</strong>
-          <div id="upgrade-icons" style="margin-top:4px; font-size: 16px;"></div>
-        </div>
-        <label for="targetModeSelect">Targeting Mode:</label>
-        <select id="targetModeSelect">
-          <option value="first">First</option>
-          <option value="last">Last</option>
-          <option value="strong">Strong</option>
-          <option value="close">Close</option>
-        </select>
-        <br>
-        <button id="upgrade1Btn">Upgrade Path 1</button>
-        <button id="upgrade2Btn">Upgrade Path 2</button>
-        <button id="sellBtn">Sell Tower</button>
-     
-      </div>
-
-      <div id="enemy-info-panel" style="display: none;">
-        <h3>Enemy Types</h3>
-        <div id="enemy-list"></div>
-        <button id="closeEnemyInfoBtn">Close</button>
-      </div>
-
-
-
-      <div id="tower-preview" style="display: none;">
-        <h3 id="preview-name"></h3>
-        <p id="preview-cost"></p>
-        <ul id="preview-stats"></ul>
-      </div>
-
-  <script>
-  (() => {
+  
+// === DOM ELEMENT REFERENCES ===
+// Get references to key UI elements for game control and display
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const moneyDisplay = document.getElementById("money-display");
@@ -483,6 +18,9 @@
     const sellBtn = document.getElementById("sellBtn");
     const messageBox = document.getElementById("message-box");
 
+// === GAME STATE VARIABLES ===
+// These track the player's current resources, wave progress, and game settings
+
     let money = 500,
       lives = 10,
       waveNumber = 0,
@@ -494,24 +32,36 @@
       gameSpeed = 1,
       enemyTypes = ["normal", "fast"];
 
+// === TOWER PLACEMENT STATE ===
+// Tracks user input and UI context for tower placement
+
     let selectedTowerType = null,
       placingTower = false,
       selectedTower = null,
       hoveredTower = null;
 
+// Mouse position for tower placement
+
     let placementX = 0, placementY = 0;
 
+// === GAME ENTITIES ===
+// Dynamic game objects stored and updated each fram
 
     let towers = [],
       enemies = [],
       bullets = [],
       effects = [];
 
+      // === EVENT LISTENERS ===
+// Cancel button: exits tower placement mode
+
       document.getElementById("cancelTowerBtn").addEventListener("click", () => {
         placingTower = false;
         selectedTowerType = null;
       });
 
+// === TOWER COSTS ===
+// Initial purchase cost for each tower type
 
     const towerCosts = {
       basic: 50,
@@ -530,6 +80,9 @@
       omegaCannon: 10000,
     };
 
+// === UPGRADE EFFECTS ===
+// Functional upgrades applied to each tower per path (usually modifies stats like damage, range, reload)
+    
     const upgradeEffects = {
       basic: [
         tower => { tower.reloadSpeed = Math.max(3, tower.reloadSpeed - 4); },
@@ -597,7 +150,8 @@
 
     };
 
-
+// === UPGRADE COSTS ===
+// Each tower has 2 upgrade path costs [Path1, Path2]
 
     const upgradeCosts = {
       basic: [30, 50],
@@ -618,7 +172,9 @@
 
     };
 
-        // ---- ADD BELOW upgradeCosts ----
+// === TOWER UPGRADE UI DATA ===
+// Icons (emojis) and shorthand for each tower's upgrade paths
+
     const upgradePaths = {
       basic: { path1: ["+fireRate", "🔁"], path2: ["+damage", "💥"] },
       sniper: { path1: ["+range", "🎯"], path2: ["+damage", "🔥"] },
@@ -637,6 +193,8 @@
 
 
     };
+
+// Tooltip-style descriptions for upgrade buttons
 
     const upgradeDescriptions = {
       basic: [
@@ -699,21 +257,15 @@
 
     };
 
+// === UTILITY FUNCTIONS ===
 
-
-
-
-
-
-
-
-
-
-
+// Calculate distance between two points (used for targeting, hover detection, etc.)
 
     function distance(x1, y1, x2, y2) {
       return Math.hypot(x2 - x1, y2 - y1);
     }
+
+// Display a temporary message in the message box
 
     function showMessage(text, duration = 2000) {
       clearTimeout(messageBox.clearTimeout);
@@ -725,12 +277,16 @@
       );
     }
 
+// Update top HUD displays (money, lives, wave, enemies left)
+
     function updateDisplays() {
       moneyDisplay.textContent = `Money: ${money}`;
       livesDisplay.textContent = `Lives: ${lives}`;
       waveDisplay.textContent = `Wave: ${waveNumber}`;
       enemiesLeftDisplay.textContent = `Enemies Left: ${enemies.length + enemiesToSpawn}`;
     }
+
+// Utility to draw rounded rectangles (used for UI elements, tooltips, towers, etc.)
 
     function roundRect(ctx, x, y, w, h, r) {
       if (w < 2 * r) r = w / 2;
@@ -744,6 +300,9 @@
       ctx.closePath();
     }
     
+// === BACKGROUND IMAGE ===
+// Draw the background map once loaded (used in draw loop)
+
     const backgroundImg = new Image();
     backgroundImg.src = 'backgroundimage/sprite.png';
 
@@ -757,7 +316,8 @@
       }
     }
 
-
+// === ENEMY PATH COORDINATES ===
+// Defines the path that enemies follow across the map
 
     const enemyPath = [
       { x: 0, y: 100 },
@@ -773,9 +333,13 @@
       { x: 850, y: 800 },
     ];
 
-
+// === ENEMY SPRITES CACHE ===
+// Stores dynamically created sprites for each enemy type
 
     const enemySprites = {};
+
+// === PROCEDURAL ENEMY SPRITE GENERATION ===
+// Creates top-down 64x64 enemy sprites using canvas
 
     function generateEnemySprites() {
       const types = ["normal", "fast", "armoredBoss", "shielded", "regenerator", "flying", "titan", "specter", "inferno"];
@@ -787,7 +351,8 @@
         const ctx = canvas.getContext("2d");
         ctx.translate(32, 32);
 
-        // Core color palettes
+    // === COLOR THEMES PER TYPE ===
+
         const colors = {
           normal:   ["#506830", "#344420", "#aacd6e"],
           fast:     ["#c0392b", "#7b241c", "#f1948a"],
@@ -804,46 +369,42 @@
 
         ctx.fillStyle = shade;
 
+  // === SPRITE SHAPES PER TYPE ===
+
         if (type === "normal") {
-          // Light tank
           ctx.fillStyle = base;
-          ctx.fillRect(-14, -10, 28, 20);
+          ctx.fillRect(-14, -10, 28, 20); // Body
           ctx.fillStyle = shade;
-          ctx.fillRect(-10, -4, 20, 8);
+          ctx.fillRect(-10, -4, 20, 8);   // Inner
           ctx.fillStyle = highlight;
-          ctx.fillRect(-2, -2, 4, 4);
+          ctx.fillRect(-2, -2, 4, 4);     // Core
         } else if (type === "fast") {
-          // Military jeep
           ctx.fillStyle = base;
-          ctx.fillRect(-12, -14, 24, 28);
+          ctx.fillRect(-12, -14, 24, 28); // Body
           ctx.fillStyle = "#222";
-          ctx.fillRect(-8, -6, 16, 12);
+          ctx.fillRect(-8, -6, 16, 12);   // Windows
         } else if (type === "armoredBoss") {
-          // Heavy tank with turret
           ctx.fillStyle = base;
-          ctx.fillRect(-18, -12, 36, 24);
+          ctx.fillRect(-18, -12, 36, 24); // Tank body
           ctx.fillStyle = "#222";
-          ctx.fillRect(-6, -4, 12, 8);  // turret
+          ctx.fillRect(-6, -4, 12, 8);    // Turret
           ctx.fillStyle = "#888";
-          ctx.fillRect(6, -2, 10, 4);   // barrel
+          ctx.fillRect(6, -2, 10, 4);     // Barrel
         } else if (type === "shielded") {
-          // Tank with forcefield
           ctx.fillStyle = base;
-          ctx.fillRect(-14, -10, 28, 20);
+          ctx.fillRect(-14, -10, 28, 20); // Body
           ctx.strokeStyle = "#99ccff";
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(0, 0, 24, 0, Math.PI * 2);
+          ctx.arc(0, 0, 24, 0, Math.PI * 2); // Forcefield ring
           ctx.stroke();
         } else if (type === "regenerator") {
-          // APC / Medtruck
           ctx.fillStyle = base;
-          ctx.fillRect(-13, -13, 26, 26);
+          ctx.fillRect(-13, -13, 26, 26); // Body
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(-5, -2, 10, 4);
-          ctx.fillRect(-2, -5, 4, 10);
+          ctx.fillRect(-5, -2, 10, 4);    // Cross arm
+          ctx.fillRect(-2, -5, 4, 10);    // Cross leg
         } else if (type === "flying") {
-          // Jet
           ctx.fillStyle = base;
           ctx.beginPath();
           ctx.moveTo(0, -20);
@@ -855,48 +416,46 @@
           ctx.fill();
 
           ctx.fillStyle = highlight;
-          ctx.fillRect(-4, -12, 8, 6);
+          ctx.fillRect(-4, -12, 8, 6);    // Cockpit
         } else if (type === "titan") {
-          // Giant spaceship or dropship
           ctx.fillStyle = base;
           ctx.beginPath();
-          ctx.ellipse(0, 0, 22, 16, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, 22, 16, 0, 0, Math.PI * 2); // Dropship
           ctx.fill();
 
           ctx.fillStyle = highlight;
-          ctx.fillRect(-4, -4, 8, 8);
+          ctx.fillRect(-4, -4, 8, 8);     // Core light
         } else if (type === "specter") {
-          // Stealth drone
           ctx.globalAlpha = 0.6;
           ctx.fillStyle = base;
           ctx.beginPath();
-          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.arc(0, 0, 14, 0, Math.PI * 2); // Ghost drone
           ctx.fill();
           ctx.globalAlpha = 1;
         } else if (type === "inferno") {
-          // Flame mech or heat drone
           ctx.fillStyle = base;
           ctx.beginPath();
-          ctx.arc(0, 0, 12, 0, Math.PI * 2);
+          ctx.arc(0, 0, 12, 0, Math.PI * 2); // Flame body
           ctx.fill();
           ctx.fillStyle = "#ffff33";
           ctx.beginPath();
-          ctx.arc(0, 0, 4, 0, Math.PI * 2);
+          ctx.arc(0, 0, 4, 0, Math.PI * 2);  // Flame core
           ctx.fill();
         }
 
+        // Save the rendered sprite as an image
         const img = new Image();
         img.src = canvas.toDataURL();
         enemySprites[type] = img;
       });
     }
 
+    // === INITIALIZE ENEMY SPRITES ===
+    // Call once to populate enemySprites with procedurally generated top-down visuals
     generateEnemySprites();
 
-
-
-
-
+    // === BOSS SPRITE GENERATION ===
+    // Generates a special 128x128 sprite for the boss enemy
     const bossSprite = new Image();
 
     function generateBossSprite() {
@@ -904,9 +463,9 @@
       canvas.width = 128;
       canvas.height = 128;
       const ctx = canvas.getContext("2d");
-      ctx.translate(64, 64);
+      ctx.translate(64, 64); // center drawing
 
-      // Base body
+      // Base body shape
       ctx.fillStyle = "#3a3a3a";
       ctx.beginPath();
       ctx.ellipse(0, 0, 48, 28, 0, 0, Math.PI * 2);
@@ -918,12 +477,12 @@
       ctx.arc(0, -20, 10, 0, Math.PI * 2);
       ctx.fill();
 
-      // Wings
+      // Wings (left & right)
       ctx.fillStyle = "#555";
-      ctx.fillRect(-60, -4, 20, 8); // left wing
-      ctx.fillRect(40, -4, 20, 8);  // right wing
+      ctx.fillRect(-60, -4, 20, 8);
+      ctx.fillRect(40, -4, 20, 8);
 
-      // Engines
+      // Engines (rear)
       ctx.fillStyle = "#222";
       ctx.beginPath();
       ctx.arc(-48, 12, 6, 0, Math.PI * 2);
@@ -935,31 +494,29 @@
       ctx.fillRect(-6, 28, 12, 8);
       ctx.fillRect(-3, 36, 6, 10);
 
-      // Light flicker (optional)
+      // Center light/flicker
       ctx.fillStyle = "#ff2222";
       ctx.beginPath();
       ctx.arc(0, 0, 3, 0, Math.PI * 2);
       ctx.fill();
 
+      // Save as image
       bossSprite.src = canvas.toDataURL();
     }
     generateBossSprite();
 
 
-
-
-
-   
-
+    // === TOWER SPRITE LOADING ===
+    // Loads tower visuals from folders like: towerimages/basictower/sprite.png
     const towerSprites = {};
 
     function loadTowerSprites() {
-      const types = Object.keys(towerCosts);
+      const types = Object.keys(towerCosts); // gets tower type names
       types.forEach(type => {
         const img = new Image();
-        // Loads: towerimages/basictower/sprite.png, snipertower, flametower, etc.
         img.src = `towerimages/${type}tower/sprite.png`;
 
+        // Debug feedback for asset loading
         img.onload = () => console.log(`✅ Loaded: ${img.src}`);
         img.onerror = () => console.warn(`⚠️ Could not load: ${img.src}`);
 
@@ -971,135 +528,131 @@
 
 
 
-
-
-
-
+    // === TOWER CLASS ===
+    // Represents all behavior and data for an individual tower
     class Tower {
       constructor(x, y, type) {
+        // --- Position & Type ---
         this.x = x;
         this.y = y;
         this.type = type;
+
+        // --- Core Stats ---
         this.level = 1;
         this.reloadTimer = 0;
         this.rotation = 0;
-        this.targetMode = "first"; // default mode
+        this.targetMode = "first"; // Default targeting behavior
+
+        // === Base Tower Stats by Type ===
         switch (type) {
           case "basic":
             this.range = 100;
             this.damage = 15;
             this.reloadSpeed = 15;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =100;
+            this.size = 100;
             break;
           case "sniper":
             this.range = 200;
             this.damage = 40;
             this.reloadSpeed = 40;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =100;
+            this.size = 100;
             break;
           case "cannon":
             this.range = 120;
             this.damage = 40;
             this.reloadSpeed = 25;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =105;
+            this.size = 105;
             break;
           case "flame":
             this.range = 80;
             this.damage = 10;
             this.reloadSpeed = 5;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =75;
+            this.size = 75;
             break;
           case "ice":
             this.range = 90;
             this.damage = 5;
             this.reloadSpeed = 20;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =80;
+            this.size = 80;
             break;
           case "tesla":
             this.range = 110;
             this.damage = 35;
             this.reloadSpeed = 15;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =90;
+            this.size = 90;
             break;
           case "missile":
             this.range = 160;
             this.damage = 50;
             this.reloadSpeed = 50;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =90;
+            this.size = 90;
             break;
           case "sniperElite":
             this.range = 250;
             this.damage = 70;
             this.reloadSpeed = 30;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =90;
+            this.size = 90;
             break;
           case "Obsidian":
             this.range = 160;
             this.damage = 40;
             this.reloadSpeed = 12;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =90;
+            this.size = 90;
             break;
           case "Nova":
             this.range = 100;
             this.damage = 60;
             this.reloadSpeed = 20;
             this.fireCooldown = 0;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =65;
+            this.size = 65;
             break;
           case "poison":
             this.range = 100;
             this.damage = 10;
             this.reloadSpeed = 20;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =75;
+            this.size = 75;
             break;
           case "railgun":
             this.range = 400;
             this.damage = 200;
             this.reloadSpeed = 100;
-            this.upgrades = { path1: 0, path2: 0 };
-            this.size =115;
+            this.size = 115;
             break;
           case "hyperLaser":
             this.range = 280;
             this.damage = 65;
             this.reloadSpeed = 2;
-            this.upgrades = { path1: 0, path2: 0 };
             this.size = 100;
             break;
           case "omegaCannon":
             this.range = 280;
             this.damage = 800;
             this.reloadSpeed = 20;
-            this.upgrades = { path1: 0, path2: 0 };
             this.size = 120;
             break;
-
-
-
         }
+
+        // === Upgrade State ===
+        this.upgrades = { path1: 0, path2: 0 };
       }
+
+      // === UPDATE METHOD ===
+      // Handles firing logic, cooldowns, targeting, and special effects
       update() {
         this.reloadTimer += gameSpeed;
         if (this.fireCooldown > 0) this.fireCooldown -= gameSpeed;
+
         if (this.reloadTimer >= this.reloadSpeed) {
           this.reloadTimer = 0;
+
+          // Filter enemies in range
           let inRange = enemies.filter(
             (e) => !e.dead && distance(this.x, this.y, e.x, e.y) <= this.range
           );
 
           let target = null;
 
+          // === Targeting Logic ===
           if (inRange.length > 0) {
             switch (this.targetMode) {
               case "first":
@@ -1126,11 +679,14 @@
           }
 
           if (target) {
+            // === Firing Logic ===
             this.rotation = Math.atan2(target.y - this.y, target.x - this.x);
+
             switch (this.type) {
               case "flame":
                 target.health -= this.damage * 0.5;
                 break;
+
               case "ice":
                 if (!target.slowTimer) {
                   target.originalSpeed = target.speed;
@@ -1139,65 +695,59 @@
                 }
                 target.health -= this.damage * 0.8;
                 break;
+
               case "tesla":
                 enemies.forEach((e) => {
-                  if ( !e.dead && distance(e.x, e.y, target.x, target.y) < 40 ) {
+                  if (!e.dead && distance(e.x, e.y, target.x, target.y) < 40) {
                     e.health -= this.damage;
                   }
                 });
                 break;
 
-
-
-
-
-
               case "Obsidian":
                 target.health -= this.damage;
-
-                // Burn effect: adds a burn property to the enemy
                 if (!target.burn) {
-                  target.burn = {
-                    damagePerSecond: 5,
-                    duration: 3, // seconds
-                    elapsed: 0,
-                  };
+                  target.burn = { damagePerSecond: 5, duration: 3, elapsed: 0 };
                 }
                 effects.push(new BurnEffect(target.x, target.y));
                 break;
+
               case "poison":
                 target.health -= this.damage * 0.3;
                 if (!target.poison) {
                   target.poison = { dps: 4, duration: 4, elapsed: 0 };
                 }
                 break;
+
               case "Nova":
-
                 if (this.fireCooldown <= 0) {
-                    enemies.forEach((enemy) => {
-                      const dx = enemy.x - this.x;
-                      const dy = enemy.y - this.y;
-                      const dist = Math.sqrt(dx * dx + dy * dy);
-                      if (dist <= this.range) {
-                        enemy.health -= this.damage;
-                      }
-                    });
-                    this.fireCooldown = this.reloadSpeed;
-                    effects.push(new SunBeamEffect(this.x, this.y)); // 🔥 Add beam visual
-                  }
-                  break;
-              default:
+                  enemies.forEach((enemy) => {
+                    const dist = distance(this.x, this.y, enemy.x, enemy.y);
+                    if (dist <= this.range) {
+                      enemy.health -= this.damage;
+                    }
+                  });
+                  this.fireCooldown = this.reloadSpeed;
+                  effects.push(new SunBeamEffect(this.x, this.y));
+                }
+                break;
 
+              default:
+                // Generic bullet
                 console.log("✅ Bullet fired", this.x, this.y, "Type:", this.type);
                 bullets.push(
                   new Bullet(this.x, this.y, target, this.damage, this.rotation, this.type)
                 );
             }
+
+            // Recoil animation effect
             effects.push(new RecoilBlast(this.x, this.y, this.rotation));
           }
         }
       }
 
+      // === DRAW METHOD ===
+      // Renders the tower sprite, level label, and upgrade indicators
       draw() {
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -1211,23 +761,21 @@
             this.size,
             this.size
           );
-
         } else {
           console.warn(`⚠️ Missing sprite for: ${this.type}`);
           ctx.fillStyle = "#999";
-          ctx.fillRect(-16, -16, 32, 32); // fallback box
+          ctx.fillRect(-16, -16, 32, 32);
         }
 
         ctx.restore();
 
-        // Draw level label
+        // === Draw Level Label ===
         ctx.fillStyle = "#cdf7b9";
         ctx.font = "bold 16px Arial";
         ctx.textAlign = "center";
         ctx.fillText(`Lv.${this.level}`, this.x, this.y + 40);
 
-
-        // Draw range ring if hovered or selected
+        // === Draw Range Ring + Upgrade Icons ===
         if (this === hoveredTower || this === selectedTower) {
           ctx.save();
           ctx.strokeStyle = this === selectedTower ? "#cdf7b9" : "rgba(205,247,185,0.5)";
@@ -1237,14 +785,14 @@
           ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
           ctx.stroke();
 
-          // upgrade icons
+          // Draw upgrade icons
           const up = this.upgrades;
           const icons = [];
           if (up.path1 > 0) icons.push(upgradePaths[this.type].path1[1]);
           if (up.path2 > 0) icons.push(upgradePaths[this.type].path2[1]);
+
           ctx.fillStyle = "#fff";
           ctx.font = "bold 12px Arial";
-          ctx.textAlign = "center";
           icons.forEach((ico, i) => {
             ctx.fillText(ico, this.x, this.y - 25 - i * 14);
           });
@@ -1252,24 +800,36 @@
           ctx.restore();
         }
       }
-
-
-
     }
 
 
+
+    // === BULLET CLASS ===
+    // Represents a projectile fired by a tower
     class Bullet {
       constructor(x, y, target, damage, angle, type = "default") {
+        // --- Bullet position and source ---
         this.x = x;
         this.y = y;
         this.startX = x;
         this.startY = y;
+
+        // --- Targeting and type ---
         this.target = target;
         this.damage = damage;
         this.angle = angle;
-        this.speed = (type === "sniperElite") ? 6 : 12;
-        this.dead = false;
         this.type = type;
+
+        // --- Movement and speed settings ---
+        this.speed = (type === "sniperElite") ? 6 : 12;
+        this.traveled = 0;
+        this.framesAlive = 0;
+
+        // --- Status flags ---
+        this.dead = false;
+        this.hitDetected = false;
+
+        // --- Special handling for bullet types ---
         if (type === "hyperLaser") {
           this.pierceCount = 4;
           this.maxDistance = 800;
@@ -1283,14 +843,12 @@
           this.maxDistance = 9999;
           this.speed = 12;
         }
-        this.traveled = 0;
-        this.maxDistance = (type === "railgun") ? 600 : 9999;
-        this.hitEnemies = new Set();
-        this.framesAlive = 0;
-        this.hitDetected = false;
 
+        // --- Track what enemies were hit (for pierce logic) ---
+        this.hitEnemies = new Set();
       }
 
+      // === UPDATE METHOD ===
       update() {
         this.framesAlive++;
         if (this.dead) return;
@@ -1299,113 +857,105 @@
           this.dead = true;
           return;
         }
-        // Move bullet
-          const dx = this.target.x - this.x;
-          const dy = this.target.y - this.y;
-          const dist = Math.hypot(dx, dy);
 
-          const travel = this.speed * gameSpeed;
+        // --- Travel distance calculation ---
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        const travel = this.speed * gameSpeed;
 
+        // === HIT DETECTION ===
 
-
-
-
-          if (this.type === "hyperLaser") {
-            enemies.forEach(enemy => {
-              if (!enemy.dead && !this.hitEnemies.has(enemy)) {
-                const d = distance(this.x, this.y, enemy.x, enemy.y);
-                if (d < (enemy.hitRadius || 16)) {
-                  enemy.health -= this.damage;
-                  this.hitEnemies.add(enemy);
-                  effects.push(new RecoilBlast(this.x, this.y, this.angle));
-                  if (this.hitEnemies.size >= this.pierceCount) {
-                    this.dead = true;
-                  }
+        if (this.type === "hyperLaser") {
+          // Multi-hit piercing laser
+          enemies.forEach(enemy => {
+            if (!enemy.dead && !this.hitEnemies.has(enemy)) {
+              const d = distance(this.x, this.y, enemy.x, enemy.y);
+              if (d < (enemy.hitRadius || 16)) {
+                enemy.health -= this.damage;
+                this.hitEnemies.add(enemy);
+                effects.push(new RecoilBlast(this.x, this.y, this.angle));
+                if (this.hitEnemies.size >= this.pierceCount) {
+                  this.dead = true;
                 }
               }
-            });
-          } else if (dist <= travel + (this.target.hitRadius || 16)) {
-            // Standard hit logic
-            this.hitDetected = true;
-
-            switch (this.type) {
-              case "cannon":
-                enemies.forEach(e => {
-                  const d2 = distance(this.x, this.y, e.x, e.y);
-                  if (d2 < 40 && !e.dead) {
-                    e.health -= this.damage * (1 - d2 / 40);
-                  }
-                });
-                break;
-              case "poison":
-                this.target.health -= this.damage;
-                if (!this.target.poison) {
-                  this.target.poison = { dps: 4, duration: 4, elapsed: 0 };
-                }
-                break;
-              case "ice":
-                this.target.health -= this.damage;
-                if (!this.target.slowTimer) {
-                  this.target.originalSpeed = this.target.speed;
-                  this.target.speed *= 0.6;
-                  this.target.slowTimer = 90;
-                }
-                break;
-              case "Obsidian":
-                this.target.health -= this.damage;
-                if (!this.target.burn) {
-                  this.target.burn = {
-                    damagePerSecond: 5,
-                    duration: 3,
-                    elapsed: 0,
-                  };
-                }
-                effects.push(new BurnEffect(this.x, this.y));
-                break;
-
-              case "omegaCannon":
-                enemies.forEach(e => {
-                  if (!e.dead && distance(this.x, this.y, this.target.x, this.target.y) < 100) {
-                    e.health -= this.damage;
-                    effects.push(new RecoilBlast(e.x, e.y, this.angle));
-                  }
-                });
-                break;
-
-
-
-
-              default:
-                this.target.health -= this.damage;
-                break;
             }
+          });
 
-            effects.push(new RecoilBlast(this.x, this.y, this.angle));
-            this.dead = true;
-            return;
+        } else if (dist <= travel + (this.target.hitRadius || 16)) {
+          // Standard collision logic
+          this.hitDetected = true;
+
+          switch (this.type) {
+            case "cannon":
+              enemies.forEach(e => {
+                const d2 = distance(this.x, this.y, e.x, e.y);
+                if (d2 < 40 && !e.dead) {
+                  e.health -= this.damage * (1 - d2 / 40);
+                }
+              });
+              break;
+
+            case "poison":
+              this.target.health -= this.damage;
+              if (!this.target.poison) {
+                this.target.poison = { dps: 4, duration: 4, elapsed: 0 };
+              }
+              break;
+
+            case "ice":
+              this.target.health -= this.damage;
+              if (!this.target.slowTimer) {
+                this.target.originalSpeed = this.target.speed;
+                this.target.speed *= 0.6;
+                this.target.slowTimer = 90;
+              }
+              break;
+
+            case "Obsidian":
+              this.target.health -= this.damage;
+              if (!this.target.burn) {
+                this.target.burn = { damagePerSecond: 5, duration: 3, elapsed: 0 };
+              }
+              effects.push(new BurnEffect(this.x, this.y));
+              break;
+
+            case "omegaCannon":
+              enemies.forEach(e => {
+                if (!e.dead && distance(this.x, this.y, this.target.x, this.target.y) < 100) {
+                  e.health -= this.damage;
+                  effects.push(new RecoilBlast(e.x, e.y, this.angle));
+                }
+              });
+              break;
+
+            default:
+              this.target.health -= this.damage;
+              break;
           }
-          
-            // Otherwise, move toward target
-          this.x += (dx / dist) * travel;
-          this.y += (dy / dist) * travel;
 
-          // Optional: bullet lifetime limit
-          this.traveled += travel;
-          if (this.traveled > this.maxDistance) this.dead = true;
+          effects.push(new RecoilBlast(this.x, this.y, this.angle));
+          this.dead = true;
+          return;
         }
 
+        // --- Move toward target if not hit ---
+        this.x += (dx / dist) * travel;
+        this.y += (dy / dist) * travel;
 
+        this.traveled += travel;
+        if (this.traveled > this.maxDistance) this.dead = true;
+      }
+
+      // === DRAW METHOD ===
       draw() {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
-        ctx.fillStyle = "#fff";
-        ctx.beginPath();
-        ctx.arc(0, 0, 3, 0, Math.PI * 2);
-        ctx.fill();
 
         console.log("Drawing bullet:", this.type, this.x, this.y);
 
+        // === Style per bullet type ===
         switch (this.type) {
           case "sniper":
             ctx.strokeStyle = "#00f";
@@ -1415,12 +965,14 @@
             ctx.lineTo(14, 0);
             ctx.stroke();
             break;
+
           case "cannon":
             ctx.fillStyle = "#f00";
             ctx.beginPath();
             ctx.arc(0, 0, 6, 0, Math.PI * 2);
             ctx.fill();
             break;
+
           case "missile":
             ctx.fillStyle = "#aaa";
             ctx.beginPath();
@@ -1430,18 +982,21 @@
             ctx.closePath();
             ctx.fill();
             break;
+
           case "poison":
             ctx.fillStyle = "green";
             ctx.beginPath();
             ctx.arc(0, 0, 4, 0, Math.PI * 2);
             ctx.fill();
             break;
+
           case "ice":
             ctx.fillStyle = "#00ffff";
             ctx.beginPath();
             ctx.arc(0, 0, 4, 0, Math.PI * 2);
             ctx.fill();
             break;
+
           case "railgun":
             ctx.strokeStyle = "#99f";
             ctx.lineWidth = 3;
@@ -1450,16 +1005,19 @@
             ctx.lineTo(10, 0);
             ctx.stroke();
             break;
+
           case "basic":
             ctx.fillStyle = "#ffcc00";
             ctx.fillRect(0, -2, 10, 4);
             break;
+
           case "flame":
             ctx.fillStyle = "orange";
             ctx.beginPath();
             ctx.arc(0, 0, 3 + Math.random() * 2, 0, Math.PI * 2);
             ctx.fill();
             break;
+
           case "tesla":
             ctx.strokeStyle = "#ffff00";
             ctx.lineWidth = 2;
@@ -1470,6 +1028,7 @@
             ctx.lineTo(4, -4);
             ctx.stroke();
             break;
+
           case "sniperElite":
             ctx.strokeStyle = "#ff00ff";
             ctx.lineWidth = 2;
@@ -1478,6 +1037,7 @@
             ctx.lineTo(16, 0);
             ctx.stroke();
             break;
+
           case "Obsidian":
             ctx.fillStyle = "#a83232";
             ctx.beginPath();
@@ -1488,30 +1048,30 @@
             ctx.arc(0, 0, 2, 0, Math.PI * 2);
             ctx.fill();
             break;
+
           case "Nova":
             ctx.fillStyle = "#ffffff";
             ctx.beginPath();
             ctx.arc(0, 0, 5 + Math.sin(Date.now() / 50) * 2, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case "hyperLaser":
-            // Glowing electric beam core
-            ctx.strokeStyle = "#ffff66";
-            ctx.lineWidth = 3 + Math.sin(this.framesAlive * 0.6); // pulsates
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(24, (Math.random() - 0.5) * 2); // slight horizontal jitter
-            ctx.stroke();
 
-            // Outer blue glow
-            ctx.strokeStyle = "rgba(100,200,255,0.4)";
-            ctx.lineWidth = 6;
+          case "hyperLaser":
+            // Core laser beam
+            ctx.strokeStyle = "#ffff66";
+            ctx.lineWidth = 3 + Math.sin(this.framesAlive * 0.6);
             ctx.beginPath();
-            ctx.moveTo(0, 0);
             ctx.lineTo(24, (Math.random() - 0.5) * 2);
             ctx.stroke();
 
-            // Electric sparks
+            // Blue glow
+            ctx.strokeStyle = "rgba(100,200,255,0.4)";
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.lineTo(24, (Math.random() - 0.5) * 2);
+            ctx.stroke();
+
+            // Sparks
             for (let i = 0; i < 2; i++) {
               ctx.strokeStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.3})`;
               ctx.beginPath();
@@ -1520,7 +1080,7 @@
               ctx.stroke();
             }
 
-            // Core orb at origin
+            // Orb at origin
             ctx.fillStyle = "#ffffcc";
             ctx.beginPath();
             ctx.arc(0, 0, 3 + Math.sin(this.framesAlive * 0.4), 0, Math.PI * 2);
@@ -1528,7 +1088,6 @@
             break;
 
           case "omegaCannon":
-            // Glowing charged shell core
             const gradient = ctx.createRadialGradient(0, 0, 2, 0, 0, 12);
             gradient.addColorStop(0, "#fff");
             gradient.addColorStop(0.3, "#99f");
@@ -1539,14 +1098,12 @@
             ctx.arc(0, 0, 12, 0, Math.PI * 2);
             ctx.fill();
 
-            // Outer pulse ring
             ctx.strokeStyle = "rgba(100,150,255,0.4)";
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.arc(0, 0, 18 + Math.sin(this.framesAlive * 0.4) * 2, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Barrel glow line
             ctx.strokeStyle = "#ccf";
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -1554,7 +1111,6 @@
             ctx.lineTo(14, 0);
             ctx.stroke();
 
-            // Shockwave ripple (optional visual)
             ctx.beginPath();
             ctx.arc(0, 0, 6 + Math.sin(this.framesAlive / 3) * 2, 0, Math.PI * 2);
             ctx.strokeStyle = "rgba(255,255,255,0.1)";
@@ -1562,29 +1118,34 @@
             ctx.stroke();
             break;
 
-
-
           default:
             ctx.fillStyle = "#ffcc00";
             ctx.fillRect(0, -2, 10, 4);
             break;
         }
+
         ctx.restore();
       }
     }
 
 
 
-
+    // === ENEMY CLASS ===
+    // Represents a single enemy that follows the path and can be damaged
     class Enemy {
       constructor(path, type, waveNumber = 1) {
+        // --- Path & position ---
         this.path = path;
-        this.type = type;
         this.currentPathIndex = 0;
         this.x = path[0].x;
         this.y = path[0].y;
-        this.hitRadius = this.type === "titan" ? 50 : 16;
+
+        // --- Enemy attributes ---
+        this.type = type;
+        this.hitRadius = (type === "titan") ? 50 : 16;
         this.dead = false;
+
+        // --- Enemy stats based on type ---
         switch (type) {
           case "fast":
             this.speed = 2.2 + 0.2 * waveNumber;
@@ -1628,41 +1189,49 @@
             this.health = 50 + 5 * waveNumber;
             this.reward = 5;
         }
+
         this.maxHealth = this.health;
       }
 
+      // === UPDATE METHOD ===
       update() {
         if (this.dead) return;
+
         const target = this.path[this.currentPathIndex + 1];
+
+        // === Reached end of path ===
         if (!target) {
           this.dead = true;
           lives--;
           showMessage("Enemy escaped! -1 Life", 1500);
 
-          // ✅ Immediately remove this enemy from the enemies[] array
+          // Remove from enemies list
           const index = enemies.indexOf(this);
           if (index !== -1) enemies.splice(index, 1);
 
           return;
         }
 
-
+        // --- Movement toward next path point ---
         const dx = target.x - this.x;
         const dy = target.y - this.y;
         const dist = Math.hypot(dx, dy);
 
-        // For Specter evasion:
-        if (this.evasive && Math.random() < 0.2) return; // 20% chance to dodge
+        // === SPECIAL ABILITIES ===
 
-        // For Inferno burn aura:
+        // Specter: 20% chance to evade update
+        if (this.evasive && Math.random() < 0.2) return;
+
+        // Inferno: slow nearby towers
         if (this.burnAura) {
           towers.forEach(t => {
             if (distance(this.x, this.y, t.x, t.y) < 50) {
-              t.reloadSpeed += 0.05 * gameSpeed; // make them slower
+              t.reloadSpeed += 0.05 * gameSpeed;
             }
           });
         }
 
+        // --- Step forward or snap to next path point ---
         if (dist < this.speed * gameSpeed) {
           this.x = target.x;
           this.y = target.y;
@@ -1672,11 +1241,14 @@
           this.y += (dy / dist) * this.speed * gameSpeed;
         }
 
+        // === STATUS EFFECTS ===
 
+        // Regenerator healing
         if (this.type === "regenerator") {
           this.health = Math.min(this.maxHealth, this.health + this.regenRate * gameSpeed);
         }
 
+        // Poison damage over time
         if (this.poison) {
           this.poison.elapsed += gameSpeed;
           if (this.poison.elapsed % 20 === 0) {
@@ -1686,7 +1258,7 @@
           if (this.poison.duration <= 0) delete this.poison;
         }
 
-
+        // Slow effect
         if (this.slowTimer) {
           this.slowTimer -= gameSpeed;
           if (this.slowTimer <= 0) {
@@ -1695,32 +1267,31 @@
           }
         }
 
-        // Apply burn damage over time
+        // Burn effect
         if (this.burn) {
           this.burn.elapsed += gameSpeed;
           if (this.burn.elapsed % 20 === 0) {
-            this.health -= this.burn.damagePerSecond / 3; // Spread over frames
+            this.health -= this.burn.damagePerSecond / 3;
           }
           this.burn.duration -= gameSpeed;
-          if (this.burn.duration <= 0) {
-            delete this.burn;
-          }
+          if (this.burn.duration <= 0) delete this.burn;
         }
 
+        // === DEATH ===
         if (this.health <= 0) {
           this.dead = true;
           const reward = this.reward || 5;
           money += reward;
           showMessage(`+${reward} Gold!`, 1000);
         }
-
       }
 
+      // === DRAW METHOD ===
       draw() {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Rotate to face next path target
+        // --- Rotate to face next path direction ---
         const next = this.path[this.currentPathIndex + 1];
         if (next) {
           const dx = next.x - this.x;
@@ -1728,7 +1299,7 @@
           ctx.rotate(Math.atan2(dy, dx));
         }
 
-        // Flash red briefly when damaged
+        // --- Flash red when damaged ---
         if (this._flashTimer && this._flashTimer > 0) {
           ctx.globalAlpha = 0.6;
           ctx.fillStyle = "red";
@@ -1739,23 +1310,17 @@
           this._flashTimer -= gameSpeed;
         }
 
+        // --- Draw enemy sprite ---
         const sprite = enemySprites[this.type];
         if (sprite) {
-          ctx.drawImage(sprite, -32, -32, 64, 64);
+          if (this.type === "titan") {
+            ctx.drawImage(sprite, -64, -64, 128, 128); // large enemy
+          } else {
+            ctx.drawImage(sprite, -32, -32, 64, 64); // normal enemy
+          }
         }
 
-
-
-        if (this.type === "titan") {
-          ctx.drawImage(sprite, -64, -64, 128, 128); // bigger draw
-        } else {
-          ctx.drawImage(sprite, -32, -32, 64, 64);
-        }
-
-
-
-
-        // Add a glow if shielded or regen
+        // --- Effects: glow outlines for special types ---
         if (this.type === "shielded") {
           ctx.strokeStyle = "rgba(100,200,255,0.5)";
           ctx.lineWidth = 2;
@@ -1771,7 +1336,7 @@
           ctx.stroke();
         }
 
-        // Health bar (fixed orientation)
+        // --- Health bar (always upright) ---
         ctx.rotate(-Math.PI / 2);
         ctx.fillStyle = "red";
         ctx.fillRect(-this.hitRadius, -this.hitRadius - 12, this.hitRadius * 2, 5);
@@ -1785,18 +1350,21 @@
 
         ctx.restore();
       }
-
-
-
     }
 
 
+
+    // === BOSS ENEMY CLASS ===
+    // Giant enemy with more health, slower speed, and special sprite
     class BossEnemy {
       constructor(path, waveNumber = 10) {
+        // Path and position
         this.path = path;
         this.currentPathIndex = 0;
         this.x = path[0].x;
         this.y = path[0].y;
+
+        // Core stats
         this.hitRadius = 30;
         this.dead = false;
         this.speed = 0.5 + 0.1 * (waveNumber / 10);
@@ -1807,6 +1375,7 @@
 
       update() {
         if (this.dead) return;
+
         const target = this.path[this.currentPathIndex + 1];
         if (!target) {
           this.dead = true;
@@ -1815,7 +1384,7 @@
           return;
         }
 
-
+        // Movement logic
         const dx = target.x - this.x;
         const dy = target.y - this.y;
         const dist = Math.hypot(dx, dy);
@@ -1829,6 +1398,7 @@
           this.y += (dy / dist) * this.speed * gameSpeed;
         }
 
+        // Check for death
         if (this.health <= 0) {
           this.dead = true;
           money += this.reward;
@@ -1840,7 +1410,7 @@
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Face the path
+        // Rotate to face direction of movement
         const next = this.path[this.currentPathIndex + 1];
         if (next) {
           const dx = next.x - this.x;
@@ -1848,12 +1418,12 @@
           ctx.rotate(Math.atan2(dy, dx));
         }
 
-        // Draw giant gunship
+        // Draw sprite
         if (bossSprite.complete) {
           ctx.drawImage(bossSprite, -64, -64, 128, 128);
         }
 
-        // Health bar (fixed orientation)
+        // Health bar
         ctx.rotate(-Math.PI / 2);
         ctx.fillStyle = "#800";
         ctx.fillRect(-40, -56, 80, 10);
@@ -1862,10 +1432,11 @@
 
         ctx.restore();
       }
-
-
     }
 
+
+    // === BURN EFFECT ===
+    // Orange flame that flickers out over time
     class BurnEffect {
       constructor(x, y) {
         this.x = x;
@@ -1893,6 +1464,9 @@
       }
     }
 
+
+    // === SUN BEAM EFFECT ===
+    // Radiating yellow beams from Nova tower
     class SunBeamEffect {
       constructor(x, y) {
         this.x = x;
@@ -1910,6 +1484,8 @@
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.globalAlpha = 1 - this.timer / 20;
+
+        // 12 rays spinning outward
         for (let i = 0; i < 12; i++) {
           const angle = (Math.PI * 2 * i) / 12;
           ctx.strokeStyle = `rgba(255, 255, 100, ${1 - this.timer / 20})`;
@@ -1919,10 +1495,14 @@
           ctx.lineTo(Math.cos(angle) * 40, Math.sin(angle) * 40);
           ctx.stroke();
         }
+
         ctx.restore();
       }
     }
 
+
+    // === RECOIL BLAST EFFECT ===
+    // Expanding ring at point of fire/impact
     class RecoilBlast {
       constructor(x, y, angle) {
         this.x = x;
@@ -1942,10 +1522,13 @@
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         ctx.globalAlpha = 1 - this.timer / 15;
+
+        // Expanding flash
         ctx.fillStyle = "orange";
         ctx.beginPath();
         ctx.arc(10, 0, 6 + this.timer / 2, 0, Math.PI * 2);
         ctx.fill();
+
         ctx.restore();
       }
     }
@@ -1953,9 +1536,10 @@
 
 
 
+    // === DRAW ENEMY PATH / RIVER ===
     function drawRiver() {
-      // Outer grass-border path
-      ctx.strokeStyle = "#000000"; // jungle border
+      // Jungle border (outer path)
+      ctx.strokeStyle = "#000000";
       ctx.lineWidth = 36;
       ctx.lineCap = "round";
       ctx.beginPath();
@@ -1963,16 +1547,16 @@
       enemyPath.forEach((p) => ctx.lineTo(p.x, p.y));
       ctx.stroke();
 
-      // Middle path (dirt color)
-      ctx.strokeStyle = "#33322F"; // Jungle dirt brown
+      // Dirt core (inner)
+      ctx.strokeStyle = "#33322F";
       ctx.lineWidth = 26;
       ctx.beginPath();
       ctx.moveTo(enemyPath[0].x, enemyPath[0].y);
       enemyPath.forEach((p) => ctx.lineTo(p.x, p.y));
       ctx.stroke();
 
-      // Inner line to mark center of the road
-      ctx.strokeStyle = "#F5B20C"; // Lighter dirt center
+      // Center line for clarity
+      ctx.strokeStyle = "#F5B20C";
       ctx.lineWidth = 4;
       ctx.setLineDash([10, 8]);
       ctx.beginPath();
@@ -1986,7 +1570,7 @@
 
 
 
-
+    // === OPTIONAL PATH OVERLAY ===
     function drawEnemyPath() {
       ctx.strokeStyle = "#F5B20C";
       ctx.lineWidth = 4;
@@ -1998,36 +1582,35 @@
       ctx.setLineDash([]);
     }
 
+    // === START WAVE LOGIC ===
     function startWave() {
-      if (spawning) return;
+      if (spawning) return; // prevent multiple starts
       waveNumber++;
 
+      // Unlock tougher types on wave 25
       if (waveNumber === 25) {
         enemyTypes.push("specter", "inferno");
       }
+
+      // Spawn titans every 5 waves after 25
       if (waveNumber >= 25 && waveNumber % 5 === 0) {
         const titanCount = Math.floor((waveNumber - 25) / 5) + 2;
-
         for (let i = 0; i < titanCount; i++) {
           enemies.push(new Enemy(enemyPath, "titan", waveNumber));
         }
-
-        // Only subtract if wave includes normal spawns
         if (enemiesToSpawn > 0) {
           enemiesToSpawn -= titanCount;
           if (enemiesToSpawn < 0) enemiesToSpawn = 0;
         }
-
         showMessage(`⚠️ ${titanCount} Titan${titanCount > 1 ? "s" : ""} incoming!`, 2500);
       }
 
-      let waveEnemies = {};
-      
-
+      // Ensure all core types are present
       if (!enemyTypes.includes("normal")) {
         enemyTypes = ["normal", "fast", "armoredBoss", "shielded", "regenerator", "flying"];
       }
 
+      // BOSS wave every 10 rounds
       if (waveNumber % 10 === 0) {
         enemiesToSpawn = 0;
         enemies.push(new BossEnemy(enemyPath, waveNumber));
@@ -2036,25 +1619,28 @@
         enemiesToSpawn = 5 + waveNumber * 4;
       }
 
+      // Extra Titan overlap catch (just in case)
       if (waveNumber >= 25 && waveNumber % 5 === 0) {
         enemies.push(new Enemy(enemyPath, "titan", waveNumber));
-      if (enemiesToSpawn > 0) enemiesToSpawn -= 1;
+        if (enemiesToSpawn > 0) enemiesToSpawn--;
         showMessage("⚠️ Titan incoming!", 2500);
       }
-
 
       spawning = true;
       spawnTimer = 0;
       showMessage(`Wave ${waveNumber} started!`, 2000);
     }
 
-    canvas.addEventListener("click", (e) => {
-      const rect = canvas.getBoundingClientRect(),
-            mx = e.clientX - rect.left,
-            my = e.clientY - rect.top;
 
+      // === HANDLE CANVAS CLICK ===
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      // === PLACING A NEW TOWER ===
       if (placingTower && selectedTowerType) {
-        // Check path proximity
+        // Block path overlap
         let onPath = false;
         for (let i = 0; i < enemyPath.length - 1; i++) {
           const p = enemyPath[i], q = enemyPath[i + 1];
@@ -2067,10 +1653,16 @@
         }
         if (onPath) return showMessage("Cannot place on the path!", 1000);
 
-        if (towers.some(t => distance(t.x, t.y, mx, my) < 40)) return showMessage("Too close to another tower!", 1000);
+        // Block overlapping another tower
+        if (towers.some(t => distance(t.x, t.y, mx, my) < 40)) {
+          return showMessage("Too close to another tower!", 1000);
+        }
+
+        // Check money
         const cost = towerCosts[selectedTowerType];
         if (money < cost) return showMessage("Not enough money!", 1000);
 
+        // Place tower
         money -= cost;
         towers.push(new Tower(mx, my, selectedTowerType));
         placingTower = false;
@@ -2079,27 +1671,29 @@
         return;
       }
 
-      // Tower selection / upgrade panel
-      selectedTower = towers.find((t) => distance(mx, my, t.x, t.y) < 20) || null;
+      // === SELECTING A TOWER FOR UPGRADES ===
+      selectedTower = towers.find(t => distance(mx, my, t.x, t.y) < 20) || null;
       upgradePanel.style.display = selectedTower ? "block" : "none";
-      if (selectedTower) {
 
+      if (selectedTower) {
         const type = selectedTower.type;
+
+        // Update upgrade buttons with text and cost
         upgrade1Btn.textContent = `Path 1: ${upgradeDescriptions[type][0]} ($${upgradeCosts[type][0]})`;
         upgrade2Btn.textContent = `Path 2: ${upgradeDescriptions[type][1]} ($${upgradeCosts[type][1]})`;
 
-                // Add icons to panel
+        // Display icons
         const icons = [];
         const up = selectedTower.upgrades;
-        if (up.path1 > 0) icons.push(upgradePaths[selectedTower.type].path1[1]);
-        if (up.path2 > 0) icons.push(upgradePaths[selectedTower.type].path2[1]);
+        if (up.path1 > 0) icons.push(upgradePaths[type].path1[1]);
+        if (up.path2 > 0) icons.push(upgradePaths[type].path2[1]);
         document.getElementById("upgrade-icons").innerHTML = icons.join(" ");
 
-
-        if (selectedTower.upgrades.path1 > 0) {
+        // Lock conflicting upgrade path
+        if (up.path1 > 0) {
           upgrade2Btn.disabled = true;
           upgrade2Btn.textContent += " (Locked)";
-        } else if (selectedTower.upgrades.path2 > 0) {
+        } else if (up.path2 > 0) {
           upgrade1Btn.disabled = true;
           upgrade1Btn.textContent += " (Locked)";
         } else {
@@ -2107,28 +1701,34 @@
           upgrade2Btn.disabled = false;
         }
 
-
-
-        sellBtn.textContent = `Sell Tower ($${Math.floor(towerCosts[selectedTower.type] / 2)})`;
+        // Show sell value
+        sellBtn.textContent = `Sell Tower ($${Math.floor(towerCosts[type] / 2)})`;
       }
     });
 
+
+    // === MOUSE MOVE: Track Hover and Tower Placement Cursor ===
     canvas.addEventListener("mousemove", (e) => {
-      const rect = canvas.getBoundingClientRect(),
-            mx = e.clientX - rect.left,
-            my = e.clientY - rect.top;
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
 
+      // Highlight hovered tower for UI
       hoveredTower = towers.find((t) => distance(mx, my, t.x, t.y) < 20) || null;
-        if (placingTower) {
-          placementX = mx;
-          placementY = my;
-        }
 
+      // Track placement position for rendering ghost
+      if (placingTower) {
+        placementX = mx;
+        placementY = my;
+      }
     });
 
+
+    // === TOWER MENU CLICK: Choose Tower to Place ===
     towerMenu.addEventListener("click", (e) => {
       if (e.target.tagName !== "BUTTON") return;
       const type = e.target.dataset.tower;
+
       if (towerCosts[type]) {
         selectedTowerType = type;
         placingTower = true;
@@ -2139,6 +1739,7 @@
     });
 
 
+    // === SHOW TOWER PREVIEW ON HOVER ===
     towerMenu.addEventListener("mouseover", (e) => {
       if (e.target.tagName !== "BUTTON") return;
       const towerType = e.target.dataset.tower;
@@ -2159,6 +1760,7 @@
       previewBox.style.display = "block";
     });
 
+    // === HIDE TOWER PREVIEW ON EXIT ===
     towerMenu.addEventListener("mouseout", (e) => {
       if (e.target.tagName !== "BUTTON") return;
       document.getElementById("tower-preview").style.display = "none";
@@ -2166,20 +1768,25 @@
 
 
 
+
+    // === UPGRADE BUTTON PATH 1 ===
     upgrade1Btn.addEventListener("click", () => {
       if (!selectedTower) return;
+
       const type = selectedTower.type;
       const cost = upgradeCosts[type][0];
 
+      // Block if path 2 already used
       if (selectedTower.upgrades.path2 > 0) {
         return showMessage("❌ You already upgraded Path 2!", 1500);
       }
 
       if (money < cost) return showMessage("Not enough money!", 1500);
+
+      // Apply upgrade
       money -= cost;
       selectedTower.level++;
       selectedTower.upgrades.path1++;
-
       upgradeEffects[type][0](selectedTower);
 
       updateDisplays();
@@ -2188,20 +1795,27 @@
 
 
 
+
+    // === UPGRADE BUTTON PATH 2 ===
     upgrade2Btn.addEventListener("click", () => {
       if (!selectedTower) return;
+
       const type = selectedTower.type;
       const cost = upgradeCosts[type][1];
 
+      // Block if path 1 already used
       if (selectedTower.upgrades.path1 > 0) {
         return showMessage("❌ You already upgraded Path 1!", 1500);
       }
 
       if (money < cost) return showMessage("Not enough money!", 1500);
+
+      // Apply upgrade
       money -= cost;
       selectedTower.level++;
       selectedTower.upgrades.path2++;
 
+      // Apply custom effect based on tower type
       switch (type) {
         case "basic":
           selectedTower.damage += 15;
@@ -2248,6 +1862,7 @@
 
 
 
+    // === SELL TOWER BUTTON ===
     sellBtn.addEventListener("click", () => {
       if (!selectedTower) return;
       const refund = Math.floor(towerCosts[selectedTower.type] / 2);
@@ -2259,26 +1874,30 @@
       showMessage(`Sold for $${refund}`, 1500);
     });
 
+    // === START WAVE BUTTON ===
     startBtn.addEventListener("click", startWave);
 
+    // === PAUSE / RESUME BUTTON ===
     stopBtn.addEventListener("click", () => {
       gamePaused = !gamePaused;
       stopBtn.textContent = gamePaused ? "Resume" : "Pause";
       showMessage(gamePaused ? "Game Paused" : "Game Resumed", 1000);
     });
 
+    // === AUTO START TOGGLE ===
     autoBtn.addEventListener("click", () => {
       autoStart = !autoStart;
       autoBtn.textContent = `Auto Start: ${autoStart ? "ON" : "OFF"}`;
     });
 
+    // === GAME SPEED CYCLE BUTTON ===
     speedBtn.addEventListener("click", () => {
       gameSpeed = gameSpeed >= 10 ? 1 : gameSpeed + 1;
       speedBtn.textContent = `Speed: ${gameSpeed}x`;
     });
 
-
     function gameLoop() {
+      // === GAME OVER CHECK ===
       if (lives <= 0) {
         gamePaused = true;
         showMessage("Game Over!", 5000);
@@ -2290,100 +1909,89 @@
         drawRiver();
         drawEnemyPath();
 
-            if (placingTower && selectedTowerType) {
-              ctx.save();
+        // === DRAW TOWER PLACEMENT PREVIEW ===
+        if (placingTower && selectedTowerType) {
+          ctx.save();
 
-
-
-
-              let towerRange = (() => {
-                switch (selectedTowerType) {
-                  case "sniper": return 200;
-                  case "cannon": return 120;
-                  case "flame": return 80;
-                  case "ice": return 90;
-                  case "tesla": return 110;
-                  case "missile": return 160;
-                  case "sniperElite": return 250;
-                  case "Obsidian": return 160;
-                  case "Nova": return 100;
-                  case "poison": return 100;
-                  case "railgun": return 400;
-                  case "hyperLaser": return 280;
-                  case "omegaCannon": return 280;
-                  case "basic": default: return 100;
-                }
-              })();
-
-
-
-
-              
-              ctx.strokeStyle = "#0f0";
-              let valid = true;
-
-              for (let i = 0; i < enemyPath.length - 1; i++) {
-                const p = enemyPath[i], q = enemyPath[i + 1];
-                const dx = q.x - p.x, dy = q.y - p.y;
-                const t = ((placementX - p.x) * dx + (placementY - p.y) * dy) / (dx * dx + dy * dy);
-                if (t > 0 && t < 1) {
-                  const cx = p.x + t * dx, cy = p.y + t * dy;
-                  if (distance(placementX, placementY, cx, cy) < 40) valid = false;
-                }
-              }
-              if (towers.some(t => distance(t.x, t.y, placementX, placementY) < 40)) valid = false;
-
-              ctx.strokeStyle = valid ? "#0f0" : "#f00";
-              ctx.globalAlpha = 0.3;
-              ctx.beginPath();
-              ctx.arc(placementX, placementY, towerRange, 0, Math.PI * 2);
-              ctx.fillStyle = valid ? "#0f04" : "#f004";
-              ctx.fill();
-              ctx.stroke();
-              ctx.restore();
+          // Determine range ring based on selected tower type
+          let towerRange = (() => {
+            switch (selectedTowerType) {
+              case "sniper": return 200;
+              case "cannon": return 120;
+              case "flame": return 80;
+              case "ice": return 90;
+              case "tesla": return 110;
+              case "missile": return 160;
+              case "sniperElite": return 250;
+              case "Obsidian": return 160;
+              case "Nova": return 100;
+              case "poison": return 100;
+              case "railgun": return 400;
+              case "hyperLaser":
+              case "omegaCannon": return 280;
+              default: return 100;
             }
+          })();
 
+          // Check if placement is valid
+          let valid = true;
+          for (let i = 0; i < enemyPath.length - 1; i++) {
+            const p = enemyPath[i], q = enemyPath[i + 1];
+            const dx = q.x - p.x, dy = q.y - p.y;
+            const t = ((placementX - p.x) * dx + (placementY - p.y) * dy) / (dx * dx + dy * dy);
+            if (t > 0 && t < 1) {
+              const cx = p.x + t * dx, cy = p.y + t * dy;
+              if (distance(placementX, placementY, cx, cy) < 40) valid = false;
+            }
+          }
+          if (towers.some(t => distance(t.x, t.y, placementX, placementY) < 40)) valid = false;
 
+          ctx.strokeStyle = valid ? "#0f0" : "#f00";
+          ctx.globalAlpha = 0.3;
+          ctx.beginPath();
+          ctx.arc(placementX, placementY, towerRange, 0, Math.PI * 2);
+          ctx.fillStyle = valid ? "#0f04" : "#f004";
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // === ENEMY SPAWNING ===
         if (spawning && enemiesToSpawn > 0) {
           spawnTimer--;
           if (spawnTimer <= 0) {
-            // Expand enemy types if needed
             if (waveNumber > 5 && enemyTypes.length < 6) {
               enemyTypes = ["normal", "fast", "armoredBoss", "shielded", "regenerator", "flying"];
             }
-
             const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
             enemies.push(new Enemy(enemyPath, type, waveNumber));
             enemiesToSpawn--;
-
-            // Reset spawn timer
             spawnTimer = Math.max(10, 40 - waveNumber * 2);
           }
         }
 
-
+        // === AUTO START NEXT WAVE ===
         if (spawning && enemiesToSpawn === 0 && enemies.length === 0) {
           spawning = false;
           if (autoStart) startWave();
         }
 
-        towers.forEach((t) => t.update());
-        bullets.forEach((b) => b.update());
-        enemies.forEach((e) => e.update());
-        effects.forEach((e) => e.update());
+        // === GAME OBJECT UPDATES ===
+        towers.forEach(t => t.update());
+        bullets.forEach(b => b.update());
+        enemies.forEach(e => e.update());
+        effects.forEach(e => e.update());
 
+        // === CLEANUP ===
+        effects = effects.filter(e => !e.finished);
+        bullets = bullets.filter(b => !b.dead);
+        enemies = enemies.filter(e => !e.dead || e.health > 0);
 
-        effects = effects.filter((e) => !e.finished);
-        bullets = bullets.filter((b) => !b.dead);        
-        enemies = enemies.filter((e) => !e.dead || e.health > 0);
-
-
-
-        towers.forEach((t) => t.draw());
-        enemies.forEach((e) => e.draw());
-        bullets.forEach((b) => b.draw());
-        effects.forEach((e) => e.draw());
-       
+        // === RENDER ===
+        towers.forEach(t => t.draw());
+        enemies.forEach(e => e.draw());
+        bullets.forEach(b => b.draw());
+        effects.forEach(e => e.draw());
 
         updateDisplays();
       }
@@ -2391,16 +1999,18 @@
       requestAnimationFrame(gameLoop);
     }
 
+
     updateDisplays();
     startWave();
     requestAnimationFrame(gameLoop);
 
+    // === ENEMY INFO UI SETUP ===
     const enemyInfoBtn = document.getElementById("enemyInfoBtn");
     const enemyInfoPanel = document.getElementById("enemy-info-panel");
     const enemyList = document.getElementById("enemy-list");
     const closeEnemyInfoBtn = document.getElementById("closeEnemyInfoBtn");
 
-    // Add your enemy descriptions:
+    // === ENEMY DESCRIPTIONS ===
     const enemyDescriptions = {
       normal: "Standard tank — balanced health & speed.",
       fast: "Fast-moving jeep — low health, quick.",
@@ -2413,6 +2023,7 @@
       inferno: "Flame mech with burn aura."
     };
 
+    // === OPEN ENEMY INFO PANEL ===
     enemyInfoBtn.addEventListener("click", () => {
       enemyList.innerHTML = "";
       Object.keys(enemySprites).forEach(type => {
@@ -2431,12 +2042,7 @@
       enemyInfoPanel.style.display = "block";
     });
 
+    // === CLOSE ENEMY INFO PANEL ===
     closeEnemyInfoBtn.addEventListener("click", () => {
       enemyInfoPanel.style.display = "none";
     });
-
-
-  })();
-  </script>
-</body>
-</html>

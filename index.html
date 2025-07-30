@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Metadata and Styles -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jungle Tower Defense</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Game Title -->
+  <h1 id="game-title">🌿 Cole's Tower Defense 🌿</h1>
+
+  <!-- Game Stats (Top Bar) -->
+  <div id="status-row" class="ui-row">
+    <div class="stat-box" id="money-display">💰 Money: 500</div>
+    <div class="stat-box" id="lives-display">❤️ Lives: 10</div>
+    <div class="stat-box" id="wave-display">🌊 Wave: 0</div>
+    <div class="stat-box" id="enemies-left">🧟 Enemies Left: 0</div>
+  </div>
+
+  <!-- Main Game Container -->
+  <div id="game-container">
+    <!-- Canvas Game Area -->
+    <div id="game-area">
+      <canvas id="gameCanvas" width="900" height="600"></canvas>
+    </div>
+
+    <!-- Tower Selection Sidebar -->
+    <div id="sidebar">
+      <div id="tower-menu">
+        <!-- Tower Buttons with Tooltips -->
+        <!-- Each button corresponds to a tower type -->
+        <div class="tooltip"><button data-tower="basic">Basic Tower ($50)</button><div class="tooltiptext">Reliable starter with average damage and speed.</div></div>
+        <div class="tooltip"><button data-tower="sniper">Sniper Tower ($120)</button><div class="tooltiptext">Long-range, slow reload, high damage.</div></div>
+        <div class="tooltip"><button data-tower="cannon">Cannon Tower ($150)</button><div class="tooltiptext">Deals splash damage in a small radius.</div></div>
+        <div class="tooltip"><button data-tower="flame">Flame Tower ($180)</button><div class="tooltiptext">Rapid-fire burning damage over time.</div></div>
+        <div class="tooltip"><button data-tower="ice">Ice Tower ($200)</button><div class="tooltiptext">Slows enemies and deals cold damage.</div></div>
+        <div class="tooltip"><button data-tower="tesla">Tesla Tower ($300)</button><div class="tooltiptext">Hits multiple enemies with electricity.</div></div>
+        <div class="tooltip"><button data-tower="missile">Missile Tower ($350)</button><div class="tooltiptext">Long range, powerful missiles.</div></div>
+        <div class="tooltip"><button data-tower="sniperElite">Sniper Elite ($400)</button><div class="tooltiptext">Extreme range and high precision shots.</div></div>
+        <div class="tooltip"><button data-tower="Obsidian">Obsidian ($500)</button><div class="tooltiptext">Burns enemies and adds fire DOT.</div></div>
+        <div class="tooltip"><button data-tower="Nova">Nova ($650)</button><div class="tooltiptext">AOE pulse that hits all nearby enemies.</div></div>
+        <div class="tooltip"><button data-tower="poison">Poison ($250)</button><div class="tooltiptext">Weak but cheap — poisons enemies over time.</div></div>
+        <div class="tooltip"><button data-tower="railgun">Railgun ($800)</button><div class="tooltiptext">Extreme power and range. Slow recharge.</div></div>
+        <div class="tooltip"><button data-tower="hyperLaser">HyperLaser ($4000)</button><div class="tooltiptext">Ultra-fast laser tower with massive power.</div></div>
+        <div class="tooltip"><button data-tower="omegaCannon">Omega Cannon ($10000)</button><div class="tooltiptext">Massive cannon with extreme power and blast radius.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Message Box (for notifications) -->
+  <div id="message-box"></div>
+
+  <!-- UI Control Panel -->
+  <div id="ui">
+    <!-- Button Row: Game Controls -->
+    <div id="control-row" class="ui-row">
+      <button id="startBtn">Start Wave</button>
+      <button id="stopBtn">Pause</button>
+      <button id="autoBtn">Auto Start: ON</button>
+      <button id="speedBtn">Speed: 1x</button>
+      <button id="enemyInfoBtn">Enemy Info</button>
+      <button id="cancelTowerBtn" style="position:absolute; bottom:10px; right:10px; z-index:20; padding:6px 12px;">
+        ❌ Cancel Placement
+      </button>
+    </div>
+
+    <!-- Upgrade Panel: Shown when a tower is selected -->
+    <div id="upgrade-panel">
+      <div>
+        <strong>Upgrade Tower</strong>
+        <div id="upgrade-icons" style="margin-top:4px; font-size: 16px;"></div>
+      </div>
+      <label for="targetModeSelect">Targeting Mode:</label>
+      <select id="targetModeSelect">
+        <option value="first">First</option>
+        <option value="last">Last</option>
+        <option value="strong">Strong</option>
+        <option value="close">Close</option>
+      </select><br />
+      <button id="upgrade1Btn">Upgrade Path 1</button>
+      <button id="upgrade2Btn">Upgrade Path 2</button>
+      <button id="sellBtn">Sell Tower</button>
+    </div>
+
+    <!-- Enemy Info Panel: Shown when "Enemy Info" button is clicked -->
+    <div id="enemy-info-panel" style="display: none;">
+      <h3>Enemy Types</h3>
+      <div id="enemy-list"></div>
+      <button id="closeEnemyInfoBtn">Close</button>
+    </div>
+
+    <!-- Tower Preview Panel: Shown when hovering/selecting a tower -->
+    <div id="tower-preview" style="display: none;">
+      <h3 id="preview-name"></h3>
+      <p id="preview-cost"></p>
+      <ul id="preview-stats"></ul>
+    </div>
+  </div>
+
+  <!-- Game Script (must match your game logic filename) -->
+  <script src="allGameLogic.js"></script>
+</body>
+</html>
